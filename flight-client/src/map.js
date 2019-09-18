@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-rotatedmarker/leaflet.rotatedMarker'
 import planeImg from './img/airplane.png';
 import radarImg from './img/satellite-dish.png';
+import {Metadata} from "./metadata";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -83,46 +84,46 @@ export class RadarMap {
             .subscribe({
                 onError: error => console.error(error),
                 onNext: msg => {
-                    const radar = new Radar(msg.data);
-                    radar.addToLayer(this.radarsLayer);
-                    this.radars.push(radar);
-                },
-                onComplete: () => {
-                    const radars = this.radars.map(v => {
-                        const radar = {iata: v.iata};
-                        return radar;
-                    });
-                    this.radarClient
-                        .streamAircraftPositions(radars)
-                        .subscribe({
-                            onError: error => {
-                                console.error(error);
-                                console.dir(error);
-                            },
-                            onNext: msg => {
-                                const data = msg.data;
-                                if (this.signals.has(data.callSign)) {
-                                    const signal = this.signals.get(data.callSign);
-                                    if (data.signalLost) {
-                                        this.signals.delete(data.callSign);
-                                        signal.removeFromLayer(this.signalsLayer);
-                                    } else {
-                                        signal.update(data);
-                                    }
-                                } else {
-                                    const signal = new AircraftSignal(data);
-                                    signal.addToLayer(this.signalsLayer);
-                                    this.signals.set(signal.callSign, signal);
-                                }
-                            },
-                            onSubscribe: sub => {
-                                this.backpressureCtrl.useSubscription(sub);
-                            },
+            const radar = new Radar(msg.data);
+            radar.addToLayer(this.radarsLayer);
+            this.radars.push(radar);
+        },
+        onComplete: () => {
+            const radars = this.radars.map(v => {
+                const radar = {iata: v.iata};
+            return radar;
+        });
+            this.radarClient
+                .streamAircraftPositions(radars)
+                .subscribe({
+                    onError: error => {
+                    console.error(error);
+            console.dir(error);
+        },
+            onNext: msg => {
+                const data = msg.data;
+                if (this.signals.has(data.callSign)) {
+                    const signal = this.signals.get(data.callSign);
+                    if (data.signalLost) {
+                        this.signals.delete(data.callSign);
+                        signal.removeFromLayer(this.signalsLayer);
+                    } else {
+                        signal.update(data);
+                    }
+                } else {
+                    const signal = new AircraftSignal(data);
+                    signal.addToLayer(this.signalsLayer);
+                    this.signals.set(signal.callSign, signal);
+                }
+            },
+            onSubscribe: sub => {
+                this.backpressureCtrl.useSubscription(sub);
+            },
 
-                        });
-                },
-                onSubscribe: sub => sub.request(maxRadars),
-            });
+        });
+        },
+        onSubscribe: sub => sub.request(maxRadars),
+    });
     }
 }
 
@@ -143,9 +144,9 @@ L.Control.BackpressureCtrl = L.Control.extend({
         L.DomEvent.disableClickPropagation(input);
         window.setInterval(() => {
             if (this.subscription) {
-                this.subscription.request(Number.parseInt(input.value));
-            }
-        }, 1000);
+            this.subscription.request(Number.parseInt(input.value));
+        }
+    }, 1000);
         return input;
     },
 
@@ -216,10 +217,10 @@ class MapHandler {
     }
 
     fireAndForget(payload) {
-        if(payload.metadata === "send.to.location") {
+        if(typeof payload.metadata == Metadata  && payload.metadata.get(Metadata.ROUTE) == "send.to.location") {
             const radar = payload.data;
             this.map.panTo([radar.location.lat, radar.location.lng]);
         }
     }
-    
+
 }
