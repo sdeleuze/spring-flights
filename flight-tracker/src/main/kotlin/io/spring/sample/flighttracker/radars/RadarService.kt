@@ -42,6 +42,6 @@ class RadarService(builder: RSocketRequester.Builder) {
 			.asFlow().map { listenAircraftSignals(it) }.flattenMerge()
 
 	private fun listenAircraftSignals(radar: Radar) = requester
-			.route(String.format("listen.radar.%s", radar.iata))
+			.route("listen.radar.{iata}", radar.iata)
 			.retrieveFlow<AircraftSignal>()
 }
