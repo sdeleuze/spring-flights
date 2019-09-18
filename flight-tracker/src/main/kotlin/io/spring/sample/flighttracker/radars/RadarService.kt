@@ -1,5 +1,6 @@
-package io.spring.sample.flighttracker
+package io.spring.sample.flighttracker.radars
 
+import io.spring.sample.flighttracker.radars.AircraftSignal
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
@@ -7,7 +8,6 @@ import kotlinx.coroutines.flow.flattenMerge
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.runBlocking
-import reactor.core.publisher.Mono
 
 import org.springframework.http.MediaType
 import org.springframework.messaging.rsocket.RSocketRequester
@@ -27,7 +27,7 @@ class RadarService(builder: RSocketRequester.Builder) {
 	}
 
 	suspend fun findRadar(iata: String) = requester
-			.route(String.format("find.radar.%s", iata))
+			.route("find.radar.{iata}", iata)
 			.retrieveAndAwait<AirportLocation>()
 
 
@@ -39,9 +39,7 @@ class RadarService(builder: RSocketRequester.Builder) {
 
 	@FlowPreview
 	fun streamAircraftSignals(radars: List<Radar>)  = radars
-			.asFlow().map { listenAircraftSignals(it) }.flattenMerge()
-
-	private fun listenAircraftSignals(radar: Radar) = requester
-			.route("listen.radar.{iata}", radar.iata)
-			.retrieveFlow<AircraftSignal>()
+			.asFlow()
+			.map { requester.route("listen.radar.{iata}", it.iata).retrieveFlow<AircraftSignal>() }
+			.flattenMerge()
 }

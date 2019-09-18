@@ -1,4 +1,4 @@
-package io.spring.sample.flighttracker
+package io.spring.sample.flighttracker.radars
 
 import java.time.Instant
 

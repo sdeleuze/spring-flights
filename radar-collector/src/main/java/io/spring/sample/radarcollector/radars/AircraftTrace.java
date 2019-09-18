@@ -125,11 +125,11 @@ public class AircraftTrace {
 		trace.setBearing(bearing);
 		trace.setSpeed(RANDOM.nextInt(200) + 300);
 		trace.setLocation(location);
-		trace.setCurrentTime(generateCurrentTimestamp());
+		trace.setCurrentTime(currentTimestamp());
 		return trace;
 	}
 
-	private static Instant generateCurrentTimestamp() {
+	private static Instant currentTimestamp() {
 		LocalDateTime now = LocalDateTime.now();
 		return now.withSecond((now.getSecond()))
 				.withNano(0)

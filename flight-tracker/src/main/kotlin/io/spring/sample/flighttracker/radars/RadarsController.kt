@@ -1,9 +1,5 @@
 package io.spring.sample.flighttracker.radars
 
-import io.spring.sample.flighttracker.AircraftSignal
-import io.spring.sample.flighttracker.AirportLocation
-import io.spring.sample.flighttracker.Radar
-import io.spring.sample.flighttracker.RadarService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -35,7 +31,7 @@ class RadarsController(private val radarService: RadarService) {
 	@FlowPreview
 	@ExperimentalCoroutinesApi
 	@MessageMapping("locate.aircrafts.for")
-	fun aircraftSignal(radars: List<Radar>, requester: RSocketRequester): Flow<AircraftSignal> {
+	fun streamAircraftSignal(radars: List<Radar>, requester: RSocketRequester): Flow<AircraftSignal> {
 		connectedClients.offer(requester)
 		return radarService.streamAircraftSignals(radars).onCompletion {
 			logger.info("Server error while streaming data to the client")
@@ -50,12 +46,12 @@ class RadarsController(private val radarService: RadarService) {
 	}
 
 	@PostMapping("/location/{iata}")
-	suspend fun sendClientsToLocation(@PathVariable iata: String): ResponseEntity<*> {
+	suspend fun sendClientsToLocation(@PathVariable iata: String): String {
 		val radar = radarService.findRadar(iata)
 		for (client in connectedClients) {
 			sendRadarLocation(client, radar)
 		}
-		return ResponseEntity.ok("Clients sent to $iata")
+		return "Clients sent to $iata"
 	}
 
 	suspend fun sendRadarLocation(requester: RSocketRequester, radar: AirportLocation) {
